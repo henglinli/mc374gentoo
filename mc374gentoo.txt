@@ -79,7 +79,10 @@ B、kernel
    这时候重新insmod就好了。加上b43要开启 Monitor mode 得patch,
    所以我选的是broadcom-sta,但是它还是有问题的,有个貌似和电源管理相关的
    问题,dmesg信息就不给了,正常使用无碍。
-   d、其他什么屏幕背光,键盘灯,快捷键按照gentoo-wiki上弄就好。
+   d、kernel的参数用/dev/sdb* UUID貌似不行,arch kernel 和 diskutils
+   识别出来的UUID一样,自己编译的kernel识别出来的不同，原因不明。还有就是USB
+   接口位置别换,换了会识别成sdc的。
+   e、其他什么屏幕背光,键盘灯,快捷键按照gentoo-wiki上弄就好。
    其实gentoo-wiki的Apple Macbook Pro根本就没说支持macbook pro 7.1。
 
 C、misc
