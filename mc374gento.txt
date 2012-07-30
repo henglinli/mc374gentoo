@@ -1,0 +1,95 @@
+Installing GNU/Gentoo into usb storage for mc374
+
+就是给macbook pro 7.1 安装gentoo到移动硬盘.
+
+主要目标:
+mac374能跑funtoo x86_64,为了aireplay-ng;
+
+限定条件:
+1, bootloader不能安装到主硬盘,绝对不能。
+   从我不装Xcode command tool也能看出来我是“系统洁癖者"。
+2, 不刻盘,自己做liveusb之类的。
+
+大概步骤:A、bootloader; B、kernel; C、misc
+
+A、bootlader。
+   a、bootloader准确的说是chainloader的选择。
+	1、rEFIt:不行,它没法启动最新的 elilo-3.1.4，自己编译elilo的
+	也不行。我亲自测试过的,以我现在的能力和计数是不能让rEFIt 
+	chainload elilo或grub的。但是,本着“不折腾不舒服”的态度,
+	我还是建议读者试试看,为了了解更多。会确认自己能预测到的错误的人
+	能获得更多的信息。
+  	2、rEFInd:行,自己编译的和最新的 elilo 都可以被chainload。
+   	3、linux本身:行,版本大于3.3.0的linux支持EFI stub(通常的说就是EFI 
+	bootloader(比如说apple的)能直接load linux)。目前版本3.4.5还不支
+	持linux.conf(亲测,arch wiki上说3.6后就能支持了,没有去读linux的
+	roadmap之类的),得添加直接command line options到kernel。
+	我试过的情况是:apple 的 bootloader 能 chainload linux,但是由于
+	我command line options设置不正确(语法错误，我猜）导致停到mount 
+	root了,后来就没尝试了。
+   b、rEFInd 安装:
+ 	1、移动硬盘分区成GPT;
+	2、EFI System Partition (ESP) 用diskutils分区的话就是开头那
+	200+M的分区格式化成hfs+,关闭掉日志功能。
+        说明:
+	  ∂、格式化成hfs+？ apple的bootloader只认主硬盘(我猜更准确的说是
+	  PCI上第一个块存储设备)的fat32格式的ESP和hfs(hfs+)格式的设备里的
+	  chainloader。
+	  ß、关闭掉hfs+的日志功能? linux的hfs+ driver对有日志hfs+分区默
+	  认(不排除有modprobe参数可修改其默认行为的可能）只有读功能,关闭日
+	  志得读写。
+	3、安装rEFInd到ESP。其他的bless没试过,建议不要尝试非apple的
+	bless(8)。
+	4、elilo安装,就是下载拷贝elilo*.efi到ESP.
+	5、配置refind.conf和elilo.conf,就是让rEFInd chainload elilo,
+	elilo load linux。不确认用来boot的kernel是否有EFI stub支持的话,
+	还是装个elilo吧。我的配置文件会放到github上。
+	6、boot chroot用的linux, gentoo的
+	install-amd64-minimal-20120621.iso的kernel不行,
+	花屏;systemrescuecd-x86-2.8.1.iso里面的连个kernel都不行,
+	连屏都不花,ubuntu的kenel试过一个也不行,arch的
+	archlinux-2012.06-1-archboot-x86_64.iso里面的
+	vmlinuz_x86_64_lts终于可以boot了,这里耗了我很多时间啊,
+	如果是x86的可能要好些。
+	7、按照手册和wiki来弄吧,并祈祷!
+
+B、kernel
+   config的时候要注意的地方: 
+   a、有个专家模式,千万别开启。(我假定读者是和同等的"普通玩家",如果你是
+   "高级玩家"请无视),但是开启了的话又有很诱人的定制选项。我试过大概10次吧,
+   没一次能boot的。 
+   Device Drivers                                                                                                                 
+    -> Character devices                                                                                                           
+     -> Virtual terminal
+      -> Support for binding and unbinding console drivers 
+   一定要选,不然黑屏。
+   b、nvidia 的 driver建议不要试试了。现在nvidia有2个版本,
+   295.59根本就能insmod,各种尝试均无果,dmesg如下 BUG: unable to handle
+   kernel paging request at 00000000000024a0, 貌似在共享内存的时候
+   出错了, 320M没显存。302.17能insmod了,但是X又说 failed to initialize
+   the display subsystem for the nvidia graphics device.这个貌似是
+   apple vbios的问题,前面X说 “PCI:*(0:4:0:0) 10de:08a0:106b:00c2 
+   rev 162, Mem @ 0xd2000000/16777216, 0xc0000000/268435456, 
+   0xd0000000/33554432, I/O @ 0x00001000/128, BIOS @ 0x????????/
+   131072” 有个地址她找不到！Nouveau倒是“大丈夫”,但是会出现VRAM_LIMIT
+   的dmesg信息。
+   c、wifi,建议编译模块。我的是BCM4322b,选b43只选LP_PHY(802.11 b/g),
+   不要选N_PHY(802.11 n)和802.11 a, 我这边要是现了n 和 b/g 有时候会 
+   insmod 不了, 只选 b/g 呢有时候会出现”能连上路由器“,得不到IP得情况,
+   这时候重新insmod就好了。加上b43要开启 Monitor mode 得patch,
+   所以我选的是broadcom-sta,但是它还是有问题的,有个貌似和电源管理相关的
+   问题,dmesg信息就不给了,正常使用无碍。
+   d、其他什么屏幕背光,键盘灯,快捷键按照gentoo-wiki上弄就好。
+   其实gentoo-wiki的Apple Macbook Pro根本就没说支持macbook pro 7.1。
+
+C、misc
+   a, bluetooth 、iSight 1394 我没弄不用,multi touchpad 不能
+   multi touch 不用,用久了手疼。
+   b, rEFInd官网的系列文章建议全部读了。然后对EFI就了解了一些了。
+   觉得不够的话还有UDK的Doc可以读,然后就可以开始写EFI programming了。
+   c, Nouveau 的 wiki 可以看一下。发现MCP89(NVAF)本身就是特别的存在,
+   一个代号一个产品,它的图形性能其实不差, pcsx2 跑FF12毫无压力,压力都到
+   CPU了...其实我挺喜欢Intel CPU + Nvidia GPU 这样的组合的,
+   不喜欢带GPU的i系列。
+   d, kernel的 .conf, elilo.conf, rEFInd.conf , ESP folder
+   structure tree fstree.tx 还有本文mc374gentoo.txt在github。

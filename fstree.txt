@@ -1,0 +1,28 @@
+.
+├── arch
+│   ├── initramfs_x86_64.img
+│   └── vmlinuz_x86_64_lts
+├── elilo
+│   ├── elilo-3.14-x86_64.efi
+│   ├── elilo.conf
+│   ├── elilo.conf~
+│   ├── general.msg
+│   ├── params.msg
+│   └── textmenu-message.msg
+├── gentoo
+│   ├── linux.conf
+│   ├── vmlinuz-3.4.5-gentoo
+│   └── vmlinuz-3.4.5-gentoo.backup
+└── refind
+    ├── drivers_x64
+    │   ├── LICENSE.txt
+    │   ├── LICENSE_GPL.txt
+    │   ├── ext2_x64.efi
+    │   ├── hfs_x64.efi
+    │   ├── iso9660_x64.efi
+    │   └── reiserfs_x64.efi
+    ├── icons
+    │   ├── *.icns
+    │   
+    ├── refind.conf
+    └── refind_x64.efi
